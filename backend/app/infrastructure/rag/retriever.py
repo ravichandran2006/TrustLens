@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -77,11 +78,45 @@ class InMemoryAgreementRetriever:
         if not chunks:
             return []
         if self.embedding_service is None:
-            return chunks[:top_k]
-        query_terms = set(query.lower().split())
+            query_terms = self._tokenize(query)
+            if not query_terms:
+                return chunks[:top_k]
+            ranked_no_embedding = sorted(
+                chunks,
+                key=lambda chunk: self._overlap_score(query_terms, chunk.text),
+                reverse=True,
+            )
+            return ranked_no_embedding[:top_k]
+
+        query_terms = self._tokenize(query)
         ranked = sorted(
             chunks,
-            key=lambda chunk: len(query_terms.intersection(set(chunk.text.lower().split()))),
+            key=lambda chunk: self._overlap_score(query_terms, chunk.text),
             reverse=True,
         )
         return ranked[:top_k]
+
+    def _tokenize(self, text: str) -> set[str]:
+        raw_tokens = re.findall(r"[a-zA-Z0-9']+", text.lower())
+        return {self._normalize_token(token) for token in raw_tokens if token}
+
+    def _normalize_token(self, token: str) -> str:
+        normalized = token.strip("'")
+        if len(normalized) > 5 and normalized.endswith("ing"):
+            normalized = normalized[:-3]
+        elif len(normalized) > 4 and normalized.endswith("ed"):
+            normalized = normalized[:-2]
+        elif len(normalized) > 4 and normalized.endswith("es"):
+            normalized = normalized[:-2]
+        elif len(normalized) > 3 and normalized.endswith("s"):
+            normalized = normalized[:-1]
+        return normalized
+
+    def _overlap_score(self, query_terms: set[str], chunk_text: str) -> int:
+        if not query_terms:
+            return 0
+        chunk_terms = self._tokenize(chunk_text)
+        if not chunk_terms:
+            return 0
+        base_overlap = len(query_terms.intersection(chunk_terms))
+        return base_overlap

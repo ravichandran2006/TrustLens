@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"])
 
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-1.5-flash"
+    gemini_model: str = "gemini-1.5-pro"
 
     pinecone_api_key: str | None = None
     pinecone_index_name: str = "trustlens-agreements"

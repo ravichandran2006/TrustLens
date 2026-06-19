@@ -4,6 +4,8 @@ from functools import lru_cache
 
 from app.application.use_cases.analyze_agreement import AnalyzeAgreementUseCase
 from app.application.use_cases.answer_question import AnswerQuestionUseCase
+from app.application.use_cases.detect_risks import DetectRisksUseCase
+from app.application.use_cases.generate_summary import GenerateSummaryUseCase
 from app.config.settings import get_settings
 from app.infrastructure.embeddings.embedding_service import EmbeddingService
 from app.infrastructure.llm.gemini_client import GeminiClient
@@ -54,8 +56,11 @@ def get_gemini_client() -> GeminiClient:
 @lru_cache(maxsize=1)
 def get_analyze_use_case() -> AnalyzeAgreementUseCase:
     mongo_client = get_mongo_client()
+    gemini_client = get_gemini_client() if get_settings().gemini_api_key else None
     return AnalyzeAgreementUseCase(
         agreement_repository=mongo_client,
+        summary_use_case=GenerateSummaryUseCase(llm_client=gemini_client),
+        detect_risks_use_case=DetectRisksUseCase(llm_client=gemini_client),
         chunker=AgreementChunker(),
         retriever=get_retriever(),
         context_builder=ContextBuilder(),
