@@ -23,9 +23,10 @@ class AgreementChunker:
             end = min(len(normalized), start + self.chunk_size)
             chunk_text = normalized[start:end].strip()
             if chunk_text:
+                chunk_id = f"{agreement_id}_chunk_{index}" if agreement_id else f"chunk_{index}"
                 chunks.append(
                     AgreementChunk(
-                        id=f"chunk_{index}",
+                        id=chunk_id,
                         agreement_id=agreement_id or "",
                         text=chunk_text,
                         source=f"Clause {index + 1}",

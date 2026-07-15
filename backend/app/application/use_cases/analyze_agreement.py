@@ -65,7 +65,7 @@ class AnalyzeAgreementUseCase:
         saved_agreement = self.agreement_repository.save_agreement(agreement)
         self.agreement_repository.save_analysis_report(report)
 
-        chunks = self.chunker.chunk(saved_agreement.content)
+        chunks = self.chunker.chunk(saved_agreement.content, agreement_id=saved_agreement.id)
         if self.retriever is not None and hasattr(self.retriever, "index"):
             self.retriever.index(saved_agreement.id, chunks)
 

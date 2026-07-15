@@ -27,3 +27,8 @@ build/
 dist/
 *.egg-info/
 .eggs/
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+extension/dist/
